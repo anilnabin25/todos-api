@@ -21,31 +21,12 @@
 # Ignore uploaded files in development.
 /storage/*
 !/storage/.keep
-
-/public/assets
 .byebug_history
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
-
-/public/packs
-/public/packs-test
-/node_modules
-/yarn-error.log
-yarn-debug.log*
-.yarn-integrity
-
-# ignore videos recorded by cypress
-spec/cypress/videos
-spec/cypress/screenshots
-
-# ignore database.yml and .env file
-/config/database.yml
+config/database.yml
 .env
 
-# ignore .idea file for jetbrain product
-.idea
-
-#ignore simplecov coverage file
-/coverage
-
+# MacOS
+.DS_Store

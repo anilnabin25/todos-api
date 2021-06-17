@@ -1,0 +1,46 @@
+FROM docker.pkg.github.com/namespace-team/ruby-alpine-mysql/ruby3.0.1-alpine-mysql:latest
+LABEL maintainer="Namespace Inc"
+
+WORKDIR "/PROJECT_NAME"
+
+COPY Gemfile Gemfile.lock ./
+RUN bundle install --jobs=4 --retry=9
+
+COPY package.json yarn.lock ./
+RUN yarn
+
+COPY . ./
+
+ARG RAILS_ENV=development
+ARG SECRET_KEY_BASE
+ARG RAILS_LOG_TO_STDOUT
+ARG PRE_COMPILE=false
+ARG DATABASE_URL
+ARG LANG
+ARG TZ
+
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    LC_CTYPE="utf-8" \
+    RAILS_SERVE_STATIC_FILES=true \
+    PORT=$SERVER_PORT \
+    TERM=xterm \
+    RAILS_ENV=$RAILS_ENV \
+    SECRET_KEY_BASE=$SECRET_KEY_BASE \
+    DATABASE_URL=$DATABASE_URL \
+    LANG=$LANG \
+    RAILS_LOG_TO_STDOUT=$RAILS_LOG_TO_STDOUT \
+    TZ=$TZ \
+    NOKOGIRI_OPTION="--use-system-libraries \
+                     --with-xml2-config=/usr/bin/xml2-config \
+                     --with-xslt-config=/usr/bin/xslt-config" \
+    MYSQL_PORT=3307 \
+    SERVER_PORT=3000 \
+    WEBPACKER_PORT=3035
+
+RUN bundle exec rake assets:precompile --trace
+
+EXPOSE $SERVER_PORT
+EXPOSE $MYSQL_PORT
+EXPOSE $WEBPACKER_PORT
+CMD ["rails", "server", "-b", "0.0.0.0"]

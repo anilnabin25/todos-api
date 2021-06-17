@@ -1,0 +1,72 @@
+name: PROJECT_NAME Production deployment
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy-to-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Copy database.yml
+      run: mv ./config/database.sample.yml ./config/database.yml
+
+    - name: Login To GitHub Registry
+      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ secrets.GIT_USER_NAME }} --password-stdin
+
+    - name: Pull Image from Github Registry
+      run: docker pull docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_prod || true
+
+    - name: Build Docker Image
+      run: |
+        docker build \
+        --build-arg PRE_COMPILE=true \
+        --build-arg RAILS_ENV=production \
+        --build-arg SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE_PROD }} \
+        --build-arg DATABASE_URL=${{ secrets.DATABASE_URL_PROD }} \
+        --build-arg LANG=${{ secrets.LANG }} \
+        --build-arg RAILS_LOG_TO_STDOUT=${{ secrets.RAILS_LOG_TO_STDOUT }} \
+        --build-arg TZ=${{ secrets.TZ }} \
+        --cache-from=docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_prod \
+        -f docker/Dockerfile.prod \
+        -t docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_prod .
+    - name: Push To Git Registry
+      run: docker push docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_prod
+
+    - name: Login to Heroku Registry
+      run: echo ${{ secrets.HEROKU_API_KEY }} | docker login registry.heroku.com -u ${{ secrets.HEROKU_LOGIN }} --password-stdin
+
+    - name: Push Docker Image to Heroku Registry
+      run: |
+        docker tag docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_prod registry.heroku.com/${{secrets.HEROKU_APP_NAME_PROD}}/web
+        docker push registry.heroku.com/${{ secrets.HEROKU_APP_NAME_PROD }}/web
+    - name: Release App
+      run: |
+        echo machine api.heroku.com >> ~/.netrc
+        echo "  login ${{ secrets.HEROKU_LOGIN }}" >> ~/.netrc
+        echo "  password ${{ secrets.HEROKU_API_KEY }}" >> ~/.netrc
+        heroku container:release web --app ${{ secrets.HEROKU_APP_NAME_PROD }}
+        heroku run rails db:migrate --app ${{ secrets.HEROKU_APP_NAME_PROD }}
+    - name: Notify slack on success
+      if: success()
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+        SLACK_MESSAGE: "Deployment to production succeded"
+        SLACK_ICON: ":namespace:"
+        SLACK_USERNAME: "Deployer"
+
+    - name: Notify slack on failure
+      if: failure()
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+        SLACK_MESSAGE: "Deployment to production failed"
+        SLACK_ICON: ":namespace:"
+        SLACK_USERNAME: "Deployer"
+        SLACK_COLOR: "#FF0000"

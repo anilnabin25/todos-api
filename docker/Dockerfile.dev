@@ -1,0 +1,33 @@
+FROM docker.pkg.github.com/namespace-team/ruby-alpine-mysql/ruby3.0.1-alpine-mysql:latest
+LABEL maintainer="Namespace Inc"
+
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    LC_CTYPE="utf-8"
+
+ENV APP="/PROJECT_NAME" \
+    CONTAINER_ROOT="./" \
+    NOKOGIRI_OPTION="--use-system-libraries \
+                     --with-xml2-config=/usr/bin/xml2-config \
+                     --with-xslt-config=/usr/bin/xslt-config" \
+    MYSQL_PORT=3307 \
+    SERVER_PORT=3000 \
+    WEBPACKER_PORT=3035
+
+WORKDIR $APP
+
+COPY Gemfile Gemfile.lock $CONTAINER_ROOT
+
+COPY package.json yarn.lock $CONTAINER_ROOT
+RUN yarn
+
+COPY . $CONTAINER_ROOT
+
+ENV RAILS_SERVE_STATIC_FILES=true \
+    PORT=$SERVER_PORT \
+    TERM=xterm \
+    RAILS_ENV=development
+
+EXPOSE $SERVER_PORT
+EXPOSE $MYSQL_PORT
+EXPOSE $WEBPACKER_PORT
