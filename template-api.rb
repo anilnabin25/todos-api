@@ -685,6 +685,7 @@ after_bundle do
   run 'bundle add rubycritic --group "development, test" --skip-install'
   run 'bundle add ffaker --group "development, test" --skip-install'
   run 'bundle add pry-rails --group "development, test" --skip-install'
+  run 'bundle add simplecov --group "development, test" --skip-install'
 end
 
 create_file '.env.sample'

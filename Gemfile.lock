@@ -304,6 +304,7 @@ DEPENDENCIES
   rubocop-rspec (~> 2.4)
   rubycritic (~> 4.6)
   shoulda-matchers
+  simplecov
   spring
   tzinfo-data
 

@@ -42,6 +42,7 @@ group :development, :test do
   gem 'pry-rails', '~> 0.3.9'
   gem 'database_cleaner'
   gem 'shoulda-matchers'
+  gem 'simplecov'
 end
 
 group :development do
