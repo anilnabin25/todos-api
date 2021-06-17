@@ -14,6 +14,7 @@ AllCops:
     - tmp/**/*
     - node_modules/**/*
     - template.rb
+    - template-api.rb
 
 # Allowed environments
 Rails/UnknownEnv:
