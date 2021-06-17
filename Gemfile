@@ -28,35 +28,26 @@ gem 'bootsnap', '>= 1.4.4', require: false
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: %i[mri mingw x64_mingw]
+  gem 'dotenv-rails', '~> 2.7'
+  gem 'rspec-rails', '~> 5.0'
+  gem 'factory_bot_rails', '~> 6.2'
+  gem 'rubycritic', '~> 4.6'
+  gem 'ffaker', '~> 2.18'
+  gem 'pry-rails', '~> 0.3.9'
+  gem 'database_cleaner'
+  gem 'shoulda-matchers'
 end
 
 group :development do
   gem 'listen', '~> 3.3'
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
+  gem 'rubocop', '~> 1.17'
+  gem 'rubocop-performance', '~> 1.11'
+  gem 'rubocop-rails', '~> 2.10'
+  gem 'rubocop-rspec', '~> 2.4'
+  gem 'annotate', '~> 3.1'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
-
-gem 'dotenv-rails', '~> 2.7', groups: %i[development test]
-
-gem 'rspec-rails', '~> 5.0', groups: %i[development test]
-
-gem 'rubocop', '~> 1.17', group: :development
-
-gem 'rubocop-performance', '~> 1.11', group: :development
-
-gem 'rubocop-rails', '~> 2.10', group: :development
-
-gem 'rubocop-rspec', '~> 2.4', group: :development
-
-gem 'annotate', '~> 3.1', group: :development
-
-gem 'factory_bot_rails', '~> 6.2', groups: %i[development test]
-
-gem 'rubycritic', '~> 4.6', groups: %i[development test]
-
-gem 'ffaker', '~> 2.18', groups: %i[development test]
-
-gem 'pry-rails', '~> 0.3.9', groups: %i[development test]
