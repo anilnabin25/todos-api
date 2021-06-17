@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :item do
-    name { 'MyString' }
+    name { FFaker::Name.name }
     done { false }
     todo { nil }
   end
