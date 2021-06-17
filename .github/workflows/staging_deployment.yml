@@ -1,81 +1,81 @@
-name: PROJECT_NAME Staging Deployment
-on:
-  workflow_run:
-    workflows:
-      - PROJECT_NAME Lint and Tests
-    branches:
-      - develop
-    types:
-      - completed
-  workflow_dispatch:
-    inputs:
-      deploy:
-        description: Deploy to staging
-        required: true
+# name: PROJECT_NAME Staging Deployment
+# on:
+#   workflow_run:
+#     workflows:
+#       - PROJECT_NAME Lint and Tests
+#     branches:
+#       - develop
+#     types:
+#       - completed
+#   workflow_dispatch:
+#     inputs:
+#       deploy:
+#         description: Deploy to staging
+#         required: true
 
-jobs:
-  deploy-to-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-    - uses: actions/checkout@v2
+# jobs:
+#   deploy-to-staging:
+#     name: Deploy to Staging
+#     runs-on: ubuntu-latest
+#     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+#     steps:
+#     - uses: actions/checkout@v2
 
-    - name: Copy database.yml
-      run: cp ./config/database.sample.yml ./config/database.yml
+#     - name: Copy database.yml
+#       run: cp ./config/database.sample.yml ./config/database.yml
 
-    - name: Login to Github Registry
-      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ secrets.GIT_USER_NAME }} --password-stdin
+#     - name: Login to Github Registry
+#       run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ secrets.GIT_USER_NAME }} --password-stdin
 
-    - name: Pull Image from Github Registry
-      run: docker pull docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_stag || true
+#     - name: Pull Image from Github Registry
+#       run: docker pull docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_stag || true
 
-    - name: Build Docker Image
-      run: |
-        docker build \
-        --build-arg PRE_COMPILE=true \
-        --build-arg RAILS_ENV=staging \
-        --build-arg SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE_STAG }} \
-        --build-arg DATABASE_URL=${{ secrets.DATABASE_URL_STAG }} \
-        --build-arg LANG=${{ secrets.LANG }} \
-        --build-arg RAILS_LOG_TO_STDOUT=${{ secrets.RAILS_LOG_TO_STDOUT }} \
-        --build-arg TZ=${{ secrets.TZ }} \
-        -f docker/Dockerfile.prod \
-        -t docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_stag .
-    - name: Push To Git Registry
-      run: docker push docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_stag
+#     - name: Build Docker Image
+#       run: |
+#         docker build \
+#         --build-arg PRE_COMPILE=true \
+#         --build-arg RAILS_ENV=staging \
+#         --build-arg SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE_STAG }} \
+#         --build-arg DATABASE_URL=${{ secrets.DATABASE_URL_STAG }} \
+#         --build-arg LANG=${{ secrets.LANG }} \
+#         --build-arg RAILS_LOG_TO_STDOUT=${{ secrets.RAILS_LOG_TO_STDOUT }} \
+#         --build-arg TZ=${{ secrets.TZ }} \
+#         -f docker/Dockerfile.prod \
+#         -t docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_stag .
+#     - name: Push To Git Registry
+#       run: docker push docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_stag
 
-    - name: Login to heroku registry
-      run: echo ${{ secrets.HEROKU_API_KEY }} | docker login registry.heroku.com -u ${{ secrets.HEROKU_LOGIN }} --password-stdin
+#     - name: Login to heroku registry
+#       run: echo ${{ secrets.HEROKU_API_KEY }} | docker login registry.heroku.com -u ${{ secrets.HEROKU_LOGIN }} --password-stdin
 
-    - name: Push Docker Image to Heroku Registry
-      run: |
-        docker tag docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_stag registry.heroku.com/${{secrets.HEROKU_APP_NAME_STAG}}/web
-        docker push registry.heroku.com/${{ secrets.HEROKU_APP_NAME_STAG }}/web
-    - name: Release App
-      run: |
-        echo machine api.heroku.com >> ~/.netrc
-        echo "  login ${{ secrets.HEROKU_LOGIN }}" >> ~/.netrc
-        echo "  password ${{ secrets.HEROKU_API_KEY }}" >> ~/.netrc
-        heroku container:release web --app ${{ secrets.HEROKU_APP_NAME_STAG }}
-        heroku run rails db:migrate --app ${{ secrets.HEROKU_APP_NAME_STAG }}
-    - name: Notify slack on success
-      if: success()
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
-        SLACK_MESSAGE: "Deployment to staging succeded"
-        SLACK_ICON: ":namespace:"
-        SLACK_USERNAME: "Deployer"
+#     - name: Push Docker Image to Heroku Registry
+#       run: |
+#         docker tag docker.pkg.github.com/$GITHUB_REPOSITORY/PROJECT_NAME_stag registry.heroku.com/${{secrets.HEROKU_APP_NAME_STAG}}/web
+#         docker push registry.heroku.com/${{ secrets.HEROKU_APP_NAME_STAG }}/web
+#     - name: Release App
+#       run: |
+#         echo machine api.heroku.com >> ~/.netrc
+#         echo "  login ${{ secrets.HEROKU_LOGIN }}" >> ~/.netrc
+#         echo "  password ${{ secrets.HEROKU_API_KEY }}" >> ~/.netrc
+#         heroku container:release web --app ${{ secrets.HEROKU_APP_NAME_STAG }}
+#         heroku run rails db:migrate --app ${{ secrets.HEROKU_APP_NAME_STAG }}
+#     - name: Notify slack on success
+#       if: success()
+#       uses: rtCamp/action-slack-notify@v2
+#       env:
+#         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#         SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+#         SLACK_MESSAGE: "Deployment to staging succeded"
+#         SLACK_ICON: ":namespace:"
+#         SLACK_USERNAME: "Deployer"
 
-    - name: Notify slack on failure
-      if: failure()
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
-        SLACK_MESSAGE: "Deployment to staging failed"
-        SLACK_ICON: ":namespace:"
-        SLACK_USERNAME: "Deployer"
-        SLACK_COLOR: "#FF0000"
+#     - name: Notify slack on failure
+#       if: failure()
+#       uses: rtCamp/action-slack-notify@v2
+#       env:
+#         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#         SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+#         SLACK_MESSAGE: "Deployment to staging failed"
+#         SLACK_ICON: ":namespace:"
+#         SLACK_USERNAME: "Deployer"
+#         SLACK_COLOR: "#FF0000"

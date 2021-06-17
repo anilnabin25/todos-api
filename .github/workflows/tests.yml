@@ -1,8 +1,9 @@
-name: PROJECT_NAME Lint and Tests
+name: Todo Lint and Tests
 on:
   push:
     branches:
       - develop
+      - master
   pull_request:
     types: [opened, synchronize, reopened]
 
