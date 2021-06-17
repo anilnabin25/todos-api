@@ -87,5 +87,7 @@ RSpec.configure do |config|
     end
   end
 
+  # including helpers for the  files
   config.include RequestSpecHelper, type: :request
+  config.include ControllerSpecHelper
 end
